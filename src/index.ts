@@ -18,7 +18,9 @@ import storyRoutes from './routes/stories.js';
 const app = express();
 const PORT = parseInt(process.env.PORT || '5000');
 
-app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173', credentials: true }));
+const ALLOWED_ORIGIN = process.env.CLIENT_URL || 'http://localhost:5173';
+app.use(cors({ origin: ALLOWED_ORIGIN, credentials: true }));
+console.log(`🔒 CORS allowed for: ${ALLOWED_ORIGIN}`);
 app.use(express.json({ limit: '200mb' }));
 app.use(express.urlencoded({ limit: '200mb', extended: true }));
 
@@ -59,5 +61,5 @@ app.get(/.*/, (req: express.Request, res: express.Response, next: express.NextFu
 app.use((_req: express.Request, res: express.Response) => { res.status(404).json({ error: 'Not found' }); });
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => { console.error(err); res.status(500).json({ error: 'Internal error' }); });
 
-app.listen(PORT, () => { console.log(`🚀 TwitFeed API on http://localhost:${PORT}`); });
+app.listen(PORT, '0.0.0.0', () => { console.log(`🚀 TwitFeed API is running on port ${PORT}`); });
 export default app;
