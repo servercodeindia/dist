@@ -39,7 +39,7 @@ router.get('/feed', authenticate, async (req: AuthRequest, res: Response): Promi
       where: { followerId: userId },
       select: { followingId: true },
     });
-    const followingIds = [...following.map(f => f.followingId), userId];
+    const followingIds = [...following.map((f: { followingId: string }) => f.followingId), userId];
 
     const stories = await prisma.story.findMany({
       where: {
@@ -92,7 +92,7 @@ router.get('/user/:userId', authenticate, async (req: AuthRequest, res: Response
   try {
     const stories = await prisma.story.findMany({
       where: {
-        authorId: req.params.userId,
+        authorId: req.params.userId as string,
         expiresAt: { gt: new Date() },
       },
       include: {
@@ -125,11 +125,11 @@ router.post('/:storyId/view', authenticate, async (req: AuthRequest, res: Respon
     // Use create to track unique views — catch duplicate constraint errors
     try {
       await prisma.storyView.create({
-        data: { storyId: req.params.storyId, userId: req.user!.sub },
+        data: { storyId: req.params.storyId as string, userId: req.user!.sub },
       });
       // Only increment if this is a new view
       await prisma.story.update({
-        where: { id: req.params.storyId },
+        where: { id: req.params.storyId as string },
         data: { viewsCount: { increment: 1 } },
       });
     } catch {
@@ -144,7 +144,7 @@ router.post('/:storyId/view', authenticate, async (req: AuthRequest, res: Respon
 // Like/unlike a story
 router.post('/:storyId/like', authenticate, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const storyId = req.params.storyId;
+    const storyId = req.params.storyId as string;
     const userId = req.user!.sub;
     const existing = await prisma.storyLike.findUnique({
       where: { storyId_userId: { storyId, userId } },
@@ -178,7 +178,7 @@ router.post('/:storyId/reply', authenticate, async (req: AuthRequest, res: Respo
     if (!content?.trim()) { res.status(400).json({ error: 'Message content required' }); return; }
 
     const story = await prisma.story.findUnique({
-      where: { id: req.params.storyId },
+      where: { id: req.params.storyId as string },
       include: { author: { select: { id: true, username: true, displayName: true } } },
     });
     if (!story) { res.status(404).json({ error: 'Story not found' }); return; }
@@ -219,7 +219,7 @@ router.post('/:storyId/reply', authenticate, async (req: AuthRequest, res: Respo
     (async () => {
       try {
         await prisma.notification.create({
-          data: { recipientId: recipientId, actorId: senderId, type: 'STORY_REPLY', entityId: req.params.storyId, entityType: 'story' }
+          data: { recipientId: recipientId, actorId: senderId, type: 'STORY_REPLY', entityId: req.params.storyId as string, entityType: 'story' }
         });
       } catch {}
     })();
@@ -232,11 +232,11 @@ router.post('/:storyId/reply', authenticate, async (req: AuthRequest, res: Respo
 // Delete a story
 router.delete('/:storyId', authenticate, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const story = await prisma.story.findUnique({ where: { id: req.params.storyId } });
+    const story = await prisma.story.findUnique({ where: { id: req.params.storyId as string } });
     if (!story) { res.status(404).json({ error: 'Story not found' }); return; }
     if (story.authorId !== req.user!.sub) { res.status(403).json({ error: 'Unauthorized' }); return; }
 
-    await prisma.story.delete({ where: { id: req.params.storyId } });
+    await prisma.story.delete({ where: { id: req.params.storyId as string } });
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: 'Failed to delete story' });
