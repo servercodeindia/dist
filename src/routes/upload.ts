@@ -16,7 +16,7 @@ const router = Router();
         api_secret: process.env.CLOUDINARY_API_SECRET,
         secure: true
       });
-      (global as any).cloudinary = cloud;
+      (globalThis as any).cloudinary = cloud;
       console.log('✅ Cloudinary configured for storage');
     } catch (err) {
       console.warn('⚠️ Cloudinary package not found. Fallback to local storage.');
@@ -30,7 +30,7 @@ if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
 // Helper to upload to Cloudinary or Save Locally
 async function handleFileUpload(base64Data: string, mimeType: string, filename: string) {
-  const cloud = (global as any).cloudinary;
+  const cloud = (globalThis as any).cloudinary;
 
   if (cloud) {
     const result = await cloud.uploader.upload(base64Data, {
