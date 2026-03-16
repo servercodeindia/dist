@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import prisma from '../lib/prisma.js';
 
 export interface AuthUser { sub: string; username: string; isAdmin: boolean; }
-export interface AuthRequest extends Request { user?: AuthUser; }
+export type AuthRequest = Request & { user?: AuthUser };
 
 const activityLocks = new Map<string, number>();
 
