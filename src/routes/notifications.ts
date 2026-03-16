@@ -27,7 +27,7 @@ router.post('/read-all', authenticate, async (req: AuthRequest, res: Response): 
 
 router.post('/:id/read', authenticate, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    await prisma.notification.update({ where: { id: req.params.id }, data: { isRead: true } });
+    await prisma.notification.update({ where: { id: req.params.id as string }, data: { isRead: true } });
     res.json({ message: 'Marked read' });
   } catch (e) { console.error(e); res.status(500).json({ error: 'Server error' }); }
 });
