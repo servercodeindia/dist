@@ -39,7 +39,6 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/stories', storyRoutes);
 
-app.get('/', (_req: express.Request, res: express.Response) => { res.send('TwitFeed API Server is running'); });
 app.get('/favicon.ico', (_req: express.Request, res: express.Response) => { res.status(204).end(); });
 app.get('/api/health', (_req: express.Request, res: express.Response) => { res.json({ status: 'ok', ts: new Date().toISOString() }); });
 
@@ -61,6 +60,11 @@ app.get(/.*/, (req: express.Request, res: express.Response, next: express.NextFu
   if (staticPath) {
     res.sendFile(path.join(staticPath, 'index.html'));
   } else {
+    // Final fallback if no static path found
+    if (req.url === '/') {
+       res.send('TwitFeed API Server is running (Frontend not found in dist/ or public/)');
+       return;
+    }
     next();
   }
 });
