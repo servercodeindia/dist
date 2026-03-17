@@ -43,11 +43,14 @@ app.get('/', (_req: express.Request, res: express.Response) => { res.send('TwitF
 app.get('/favicon.ico', (_req: express.Request, res: express.Response) => { res.status(204).end(); });
 app.get('/api/health', (_req: express.Request, res: express.Response) => { res.json({ status: 'ok', ts: new Date().toISOString() }); });
 
-// Serve frontend build from internal public folder
-const distPath = path.join(process.cwd(), 'public');
-if (fs.existsSync(distPath)) {
-  console.log(`📂 Serving frontend from: ${distPath}`);
-  app.use(express.static(distPath));
+// Serve frontend build from internal folders
+const distPath = path.join(process.cwd(), 'dist');
+const publicPath = path.join(process.cwd(), 'public');
+const staticPath = fs.existsSync(distPath) ? distPath : (fs.existsSync(publicPath) ? publicPath : null);
+
+if (staticPath) {
+  console.log(`📂 Serving frontend from: ${staticPath}`);
+  app.use(express.static(staticPath));
 }
 
 // Fallback to index.html for React Router
@@ -55,7 +58,11 @@ app.get(/.*/, (req: express.Request, res: express.Response, next: express.NextFu
   if (req.url.startsWith('/api') || req.url.startsWith('/uploads')) {
     return next();
   }
-  res.sendFile(path.join(distPath, 'index.html'));
+  if (staticPath) {
+    res.sendFile(path.join(staticPath, 'index.html'));
+  } else {
+    next();
+  }
 });
 
 app.use((_req: express.Request, res: express.Response) => { res.status(404).json({ error: 'Not found' }); });
